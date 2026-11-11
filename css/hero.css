@@ -1,0 +1,132 @@
+/* =========================================================
+   Hero section
+   Every rule is scoped under #brochure-root .hero-section.
+   Change colours and fonts in the token block only.
+   ========================================================= */
+
+#brochure-root .hero-section {
+    /* ----- Tokens (placeholders) ----- */
+    --hero-bg: #422B7C;
+    --hero-panel-bg: #422B7C;   /* matches the CCTV image background, so the picture blends in */
+    --hero-title-fg: #FFF8CF;
+    --hero-font-display: "Arial Black", "Helvetica Neue", Arial, sans-serif;
+    --hero-font-body: system-ui, -apple-system, "Segoe UI", sans-serif;
+
+    position: relative;
+    box-sizing: border-box;
+    /* Cap + centre on wide screens. max-width yields automatically below
+       1300px, so this stays fully responsive. The shorthand keeps the
+       56px bottom gap: auto applies to the sides only. NOTE: this is the
+       ONLY place .hero-section margins may be declared - style.css also
+       used to set a margin on this selector, and because hero.css loads
+       later it silently overrode any margin added there. */
+    max-width: 1300px;
+    margin: 0 auto 56px;
+    padding: 0;
+    background: var(--hero-bg);
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+#brochure-root .hero-section *,
+#brochure-root .hero-section *::before,
+#brochure-root .hero-section *::after {
+    box-sizing: border-box;
+}
+
+/* ----- Hero panel: holds the title and the CCTV illustration ----- */
+
+#brochure-root .hero-section .hero-panel {
+    position: relative;
+    background: var(--hero-panel-bg);
+    padding: 56px 48px;
+    min-height: 360px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+
+/* ----- Title block on the left ----- */
+
+#brochure-root .hero-section .hero-title-block {
+    flex: 1 1 auto;
+    max-width: 60%;
+    position: relative;
+    z-index: 2;
+}
+
+#brochure-root .hero-section .hero-title {
+    margin: 0;
+    color: var(--hero-title-fg);
+    font-family: var(--hero-font-display);
+    font-weight: 900;
+    text-transform: uppercase;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    line-height: 1.05;
+    letter-spacing: 0.01em;
+    /* Hard line breaks so the title wraps the way the reference shows */
+    white-space: pre-line;
+}
+
+#brochure-root .hero-section .hero-subtitle {
+    margin: 24px 0 0;
+    color: var(--hero-title-fg);
+    opacity: 0.85;
+    font-family: var(--hero-font-body);
+    font-size: clamp(0.95rem, 1.3vw, 1.15rem);
+    line-height: 1.5;
+    max-width: 480px;
+}
+
+/* ----- CCTV pole illustration on the right ----- */
+
+#brochure-root .hero-section .hero-illustration {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 40%;
+    max-width: 360px;
+    pointer-events: none;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#brochure-root .hero-section .hero-illustration__img {
+    /* Fixed display size so a missing file does not shift the layout */
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    /* If the file is missing, keep the slot reserved but transparent */
+    background: transparent;
+}
+
+/* =========================================================
+   Phone (below 700px)
+   ========================================================= */
+
+@media (max-width: 699px) {
+    #brochure-root .hero-section .hero-panel {
+        padding: 32px 24px;
+        min-height: 280px;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    #brochure-root .hero-section .hero-title-block {
+        max-width: 100%;
+    }
+
+    #brochure-root .hero-section .hero-illustration {
+        position: relative;
+        width: 100%;
+        max-width: none;
+        height: 120px;
+        margin-top: 24px;
+    }
+}

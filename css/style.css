@@ -1,0 +1,692 @@
+/* Page canvas: same indigo as the brochure, so the brochure
+   background reads as one continuous field edge-to-edge with no
+   white borders showing through the rounded section corners. */
+html, body {
+    margin: 0;
+    padding: 0;
+    background-color: #422B7C;
+}
+
+#brochure-root {
+    /* No max-width / margin auto / border-radius: the brochure fills its
+       container horizontally so the #422B7C background extends fully. */
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 40px 24px;
+    box-sizing: border-box;
+    font-family: system-ui, -apple-system, sans-serif;
+    background-color: #422B7C;
+    border-radius: 0;
+    color: #FFF7C5;
+}
+
+#brochure-root * {
+    box-sizing: border-box;
+}
+
+/* NOTE: do NOT add margins or max-width for .hero-section here.
+   That selector is fully styled in css/hero.css, which loads AFTER this
+   file - anything declared here on the same selector gets silently
+   overridden (that duplicate rule is what broke the hero centering when
+   max-width: 1300px + margin: 0 auto were added here). */
+
+#brochure-root .hero-box {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    border: 2px dashed #cbd5e1;
+    padding: 40px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+#brochure-root .law-section {
+    display: flex;
+    flex-direction: column;
+    gap: 56px;
+    background-color: #544888;
+    padding: 48px 32px;
+    border-radius: 20px;
+    /* Cap + centre on wide screens. max-width yields automatically below
+       1400px, so the tablet/phone media queries below keep working. */
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+#brochure-root .toggle-control-container {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+#brochure-root .tab-btn {
+    padding: 14px 32px;
+    border: none;
+    background-color: #FFFBE5;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-radius: 0;
+    box-shadow: none;
+    transition: all 0.2s ease;
+    color: #422B7C;
+}
+
+#brochure-root .tab-btn.active {
+    background-color: #FFF7C5;
+    color: #422B7C;
+    box-shadow: inset 0 -4px 0 #E8B053;
+}
+
+#brochure-root .laws-rows-container {
+    display: flex;
+    flex-direction: column;
+    gap: 64px;
+    max-width: 1000px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Row 1: Book on Left (340px) | Auto Gap | Content on Right (500px) */
+#brochure-root .law-row {
+    display: grid;
+    grid-template-columns: 340px 500px;
+    justify-content: space-between;
+    align-items: stretch;
+    position: relative;
+    width: 100%;
+}
+
+/* Row 2: Content on Left (500px) | Auto Gap | Book on Right (340px) */
+#brochure-root .law-row.row-alt-2 {
+    grid-template-columns: 500px 340px;
+    justify-content: space-between;
+}
+
+#brochure-root .book-column {
+    position: relative;
+    overflow: visible; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #FFFBE5;
+    border: 2px solid #422B7C;
+    border-radius: 20px;
+    width: 100%;
+    min-height: 400px;
+    box-shadow: none;
+}
+
+#brochure-root .book-cover {
+    text-align: center;
+    padding: 36px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+#brochure-root .book-cover h3 {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #000;
+    margin-bottom: 28px;
+    line-height: 1.4;
+    text-align: center;
+    letter-spacing: -0.01em;
+}
+
+#brochure-root .book-spine-lines {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    height: 140px;
+}
+
+#brochure-root .book-spine-lines span {
+    display: block;
+    width: 4px;
+    background-color: #000;
+    border-radius: 2px;
+}
+
+#brochure-root .book-spine-lines span:nth-child(1) {
+    height: 100px;
+}
+
+#brochure-root .book-spine-lines span:nth-child(2) {
+    height: 140px;
+}
+
+#brochure-root .book-spine-lines span:nth-child(3) {
+    height: 100px;
+}
+
+#brochure-root .content-column {
+    background-color: #FFFBE5;
+    border: none;
+    padding: 36px;
+    border-radius: 20px;
+    min-height: 400px;
+    box-shadow: none;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    --active-tab-top: 50%; /* Dynamic fallback position */
+    --pointer-inset: 20px; /* matches the column's border-radius so the pointer doesn't poke out of the corners */
+}
+
+/* Dynamic Bracket Pointer: outline layer (::before) and fill layer (::after) */
+#brochure-root .law-row .content-column::before,
+#brochure-root .law-row .content-column::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 36px;
+    pointer-events: none;
+    transition: clip-path 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Outline: 1px larger than the fill, so it shows as a thin border on the outer edge */
+#brochure-root .law-row .content-column::before {
+    left: -37px;
+    width: 37px;
+    background-color: #B8B2C8;
+    z-index: 1;
+    clip-path: polygon(
+        37px var(--pointer-inset),
+        32px calc(var(--active-tab-top) * 0.2 + var(--pointer-inset) * 0.8),
+        27px calc(var(--active-tab-top) * 0.45 + var(--pointer-inset) * 0.55),
+        21px calc(var(--active-tab-top) * 0.65 + var(--pointer-inset) * 0.35),
+        16px calc(var(--active-tab-top) * 0.8 + var(--pointer-inset) * 0.2),
+        11px calc(var(--active-tab-top) * 0.9 + var(--pointer-inset) * 0.1),
+        7px calc(var(--active-tab-top) * 0.96 + var(--pointer-inset) * 0.04),
+        0px var(--active-tab-top),
+        7px calc(var(--active-tab-top) * 0.96 + (100% - var(--pointer-inset)) * 0.04),
+        11px calc(var(--active-tab-top) * 0.9 + (100% - var(--pointer-inset)) * 0.1),
+        16px calc(var(--active-tab-top) * 0.8 + (100% - var(--pointer-inset)) * 0.2),
+        21px calc(var(--active-tab-top) * 0.65 + (100% - var(--pointer-inset)) * 0.35),
+        27px calc(var(--active-tab-top) * 0.45 + (100% - var(--pointer-inset)) * 0.55),
+        32px calc(var(--active-tab-top) * 0.2 + (100% - var(--pointer-inset)) * 0.8),
+        37px calc(100% - var(--pointer-inset))
+    );
+}
+
+/* Fill */
+#brochure-root .law-row .content-column::after {
+    left: -36px;
+    background-color: #B8B2C8;
+    z-index: 2;
+    clip-path: polygon(
+        36px var(--pointer-inset),
+        32px calc(var(--active-tab-top) * 0.2 + var(--pointer-inset) * 0.8),
+        27px calc(var(--active-tab-top) * 0.45 + var(--pointer-inset) * 0.55),
+        21px calc(var(--active-tab-top) * 0.65 + var(--pointer-inset) * 0.35),
+        16px calc(var(--active-tab-top) * 0.8 + var(--pointer-inset) * 0.2),
+        11px calc(var(--active-tab-top) * 0.9 + var(--pointer-inset) * 0.1),
+        7px calc(var(--active-tab-top) * 0.96 + var(--pointer-inset) * 0.04),
+        0px var(--active-tab-top),
+        7px calc(var(--active-tab-top) * 0.96 + (100% - var(--pointer-inset)) * 0.04),
+        11px calc(var(--active-tab-top) * 0.9 + (100% - var(--pointer-inset)) * 0.1),
+        16px calc(var(--active-tab-top) * 0.8 + (100% - var(--pointer-inset)) * 0.2),
+        21px calc(var(--active-tab-top) * 0.65 + (100% - var(--pointer-inset)) * 0.35),
+        27px calc(var(--active-tab-top) * 0.45 + (100% - var(--pointer-inset)) * 0.55),
+        32px calc(var(--active-tab-top) * 0.2 + (100% - var(--pointer-inset)) * 0.8),
+        36px calc(100% - var(--pointer-inset))
+    );
+}
+
+/* Row 2: pointer on the RIGHT edge, mirrored so the tip points right */
+#brochure-root .law-row.row-alt-2 .content-column::before {
+    left: auto;
+    right: -37px;
+    transform: scaleX(-1);
+}
+
+#brochure-root .law-row.row-alt-2 .content-column::after {
+    left: auto;
+    right: -36px;
+    transform: scaleX(-1);
+}
+
+#brochure-root .content-column h3.section-badge {
+    display: inline-block;
+    background-color: #332562;
+    color: #FFF7C5;
+    padding: 8px 16px;
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 0;
+    margin-bottom: 18px;
+    align-self: flex-start;
+    letter-spacing: 0.02em;
+    box-shadow: none;
+}
+
+#brochure-root .content-column h4.section-subtitle {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #FFF7C5;
+    background-color: #422B7C;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    line-height: 1.4;
+}
+
+#brochure-root .content-column p {
+    font-size: 1.05rem;
+    color: #422B7C;
+    background-color: #ECECEC;
+    padding: 18px 20px;
+    line-height: 1.7;
+}
+
+#brochure-root .sticky-note-btn {
+    background-color: #A99FAF;
+    border: none;
+    padding: 8px 16px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: none;
+    transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+    z-index: 5;
+    white-space: nowrap;
+    color: #000;
+}
+
+#brochure-root .sticky-note-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: none;
+    filter: brightness(1.06);
+}
+
+#brochure-root .sticky-note-btn.active {
+    background-color: #FFF7C5;
+}
+
+#brochure-root .sticky-notes-wrapper.right-tabs {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translate(101%, -50%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 5;
+}
+
+#brochure-root .sticky-notes-wrapper.right-tabs .sticky-note-btn {
+    border-radius: 0;
+    text-align: left;
+}
+
+#brochure-root .sticky-notes-wrapper.left-tabs {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translate(-101%, -50%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 5;
+}
+
+#brochure-root .sticky-notes-wrapper.left-tabs .sticky-note-btn {
+    border-radius: 0;
+    text-align: right;
+}
+
+/* ===== Tablet & phone: book and content side by side (below 1100px) ===== */
+@media (max-width: 1099px) {
+    #brochure-root {
+        padding: 24px 16px;
+    }
+
+    #brochure-root .hero-box {
+        padding: 24px 20px;
+    }
+
+    #brochure-root .law-section {
+        padding: 24px 12px;
+        gap: 40px;
+    }
+
+    #brochure-root .toggle-control-container {
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 0;
+    }
+
+    #brochure-root .tab-btn {
+        flex: 1 1 140px;
+        max-width: 260px;
+        padding: 12px 16px;
+        font-size: 0.95rem;
+    }
+
+    #brochure-root .laws-rows-container {
+        gap: 40px;
+        max-width: 100%;
+    }
+
+    /* Two equal columns. Row order still alternates (book left, then book right). */
+    #brochure-root .law-row,
+    #brochure-root .law-row.row-alt-2 {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 12px;
+        justify-content: stretch;
+        align-items: stretch;
+    }
+
+    #brochure-root .law-row > * {
+        min-width: 0;
+    }
+
+    #brochure-root .book-column {
+        min-height: 0;
+        padding: 20px 8px 16px;
+    }
+
+    #brochure-root .book-cover {
+        height: auto;
+        padding: 0 4px;
+    }
+
+    #brochure-root .book-cover h3 {
+        font-size: 1rem;
+        margin-bottom: 16px;
+        overflow-wrap: anywhere;
+    }
+
+    #brochure-root .book-spine-lines {
+        height: 80px;
+        gap: 10px;
+    }
+
+    #brochure-root .book-spine-lines span:nth-child(1) { height: 60px; }
+    #brochure-root .book-spine-lines span:nth-child(2) { height: 80px; }
+    #brochure-root .book-spine-lines span:nth-child(3) { height: 60px; }
+
+    /* Tabs move inside the book as a vertical stack */
+    #brochure-root .sticky-notes-wrapper.right-tabs,
+    #brochure-root .sticky-notes-wrapper.left-tabs {
+        position: relative;
+        top: auto;
+        left: auto;
+        right: auto;
+        transform: none;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        width: 100%;
+        margin-top: 16px;
+        padding: 0 4px;
+    }
+
+    #brochure-root .sticky-notes-wrapper.right-tabs .sticky-note-btn,
+    #brochure-root .sticky-notes-wrapper.left-tabs .sticky-note-btn {
+        width: 100%;
+        text-align: center;
+        white-space: normal;
+        border-radius: 0;
+        padding: 8px 6px;
+        font-size: 0.85rem;
+    }
+
+    #brochure-root .content-column {
+        min-height: 0;
+        padding: 20px 14px;
+    }
+
+    #brochure-root .content-column h3.section-badge {
+        font-size: 0.85rem;
+        padding: 6px 10px;
+        margin-bottom: 14px;
+    }
+
+    #brochure-root .content-column h4.section-subtitle {
+        font-size: 1rem;
+        margin-bottom: 12px;
+        overflow-wrap: anywhere;
+    }
+
+    #brochure-root .content-column p {
+        font-size: 0.92rem;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+    }
+
+    /* Hide the bracket pointer. Side by side, the highlighted tab already shows the selection. */
+    #brochure-root .law-row .content-column::before,
+    #brochure-root .law-row .content-column::after {
+        display: none;
+    }
+}
+
+
+
+/* ===== Tablet & phone (below 1100px): book, tab gutter, and content side by side ===== */
+@media (max-width: 1099px) {
+    #brochure-root {
+        padding: 16px 10px;
+    }
+
+    #brochure-root .hero-box {
+        padding: 16px 12px;
+        gap: 12px;
+    }
+
+    #brochure-root .hero-box h1 {
+        font-size: 1.4rem;
+    }
+
+    #brochure-root .hero-box h2 {
+        font-size: 1.1rem;
+    }
+
+    #brochure-root .law-section {
+        padding: 16px 8px;
+        gap: 24px;
+        border-radius: 14px;
+    }
+
+    #brochure-root .toggle-control-container {
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 0;
+    }
+
+    #brochure-root .tab-btn {
+        flex: 1 1 120px;
+        max-width: 200px;
+        padding: 8px 10px;
+        font-size: 0.8rem;
+        border-radius: 0;
+    }
+
+    #brochure-root .laws-rows-container {
+        gap: 24px;
+        max-width: 100%;
+    }
+
+    /* Three columns: book | tab gutter | content. Row 2 mirrors the order.
+       The gutter holds the sticky tabs so they sit flush against the book edge. */
+    #brochure-root .law-row,
+    #brochure-root .law-row.row-alt-2 {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 60px minmax(0, 1fr);
+        column-gap: 0;
+        justify-content: stretch;
+        align-items: stretch;
+    }
+
+    /* Let the book's children become grid items so the tabs can sit in the gutter.
+       The book's box styling moves onto .book-cover. */
+    #brochure-root .law-row .book-column {
+        display: contents;
+    }
+
+    #brochure-root .law-row .book-cover {
+        grid-row: 1;
+        grid-column: 1;
+        height: auto;
+        min-width: 0;
+        padding: 16px 8px;
+        background-color: #FFF7C5;
+        border: 2px solid #422B7C;
+        border-radius: 14px;
+        box-shadow: none;
+    }
+
+    #brochure-root .law-row.row-alt-2 .book-cover {
+        grid-column: 3;
+    }
+
+    #brochure-root .book-cover h3 {
+        font-size: 0.95rem;
+        margin-bottom: 12px;
+        overflow-wrap: anywhere;
+    }
+
+    #brochure-root .book-spine-lines {
+        height: 60px;
+        gap: 8px;
+    }
+
+    #brochure-root .book-spine-lines span:nth-child(1) { height: 44px; }
+    #brochure-root .book-spine-lines span:nth-child(2) { height: 60px; }
+    #brochure-root .book-spine-lines span:nth-child(3) { height: 44px; }
+
+    /* Tabs live in the gutter, stacked vertically and centered on the book's height */
+    #brochure-root .law-row .sticky-notes-wrapper {
+        grid-row: 1;
+        grid-column: 2;
+        position: static;
+        top: auto;
+        left: auto;
+        right: auto;
+        transform: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: stretch;
+        gap: 6px;
+        padding: 0;
+        min-width: 0;
+        z-index: 5;
+    }
+
+    #brochure-root .law-row .sticky-notes-wrapper .sticky-note-btn {
+        width: 100%;
+        min-width: 0;
+        padding: 6px 2px;
+        font-size: 0.62rem;
+        line-height: 1.2;
+        text-align: center;
+        white-space: normal;
+        box-shadow: none;
+    }
+
+    /* Square edge sits against the book, rounded edge faces out */
+    #brochure-root .law-row .sticky-notes-wrapper.right-tabs .sticky-note-btn {
+        border-radius: 0;
+    }
+
+    #brochure-root .law-row .sticky-notes-wrapper.left-tabs .sticky-note-btn {
+        border-radius: 0;
+    }
+
+    #brochure-root .law-row .content-column {
+        grid-row: 1;
+        grid-column: 3;
+        min-height: 0;
+        min-width: 0;
+        padding: 14px 12px;
+        border-radius: 14px;
+    }
+
+    #brochure-root .law-row.row-alt-2 .content-column {
+        grid-column: 1;
+    }
+
+    #brochure-root .content-column h3.section-badge {
+        font-size: 0.7rem;
+        padding: 4px 8px;
+        margin-bottom: 10px;
+    }
+
+    #brochure-root .content-column h4.section-subtitle {
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+        overflow-wrap: anywhere;
+    }
+
+    #brochure-root .content-column p {
+        font-size: 0.8rem;
+        line-height: 1.55;
+        overflow-wrap: anywhere;
+    }
+
+    /* Hide the bracket pointer. Side by side, the highlighted tab already shows the selection. */
+    #brochure-root .law-row .content-column::before,
+    #brochure-root .law-row .content-column::after {
+        display: none;
+    }
+}
+
+/* ===== Small phones (below 480px): tighter still ===== */
+@media (max-width: 479px) {
+    #brochure-root {
+        padding: 12px 6px;
+    }
+
+    #brochure-root .law-section {
+        padding: 12px 6px;
+    }
+
+    #brochure-root .law-row,
+    #brochure-root .law-row.row-alt-2 {
+        grid-template-columns: minmax(0, 1fr) 54px minmax(0, 1fr);
+    }
+
+    #brochure-root .law-row .book-cover {
+        padding: 12px 6px;
+    }
+
+    #brochure-root .law-row .sticky-notes-wrapper .sticky-note-btn {
+        font-size: 0.56rem;
+        padding: 5px 1px;
+    }
+
+    #brochure-root .law-row .content-column {
+        padding: 12px 10px;
+    }
+
+    #brochure-root .content-column p {
+        font-size: 0.76rem;
+    }
+}
+/* ===== Narrow screens: the grey text panel and the subtitle bar need less padding ===== */
+@media (max-width: 1099px) {
+    #brochure-root .content-column p {
+        padding: 10px 8px;
+    }
+
+    #brochure-root .content-column h4.section-subtitle {
+        padding: 6px 8px;
+    }
+}

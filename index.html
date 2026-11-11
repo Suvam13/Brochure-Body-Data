@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Brochure Body&Data</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/hero.css" />
+    <link rel="stylesheet" href="css/surveillance.css" />
+    <link rel="stylesheet" href="css/critical-analysis.css" />
+  </head>
+  <body>
+    <div id="brochure-root" class="brochure-container">
+      <!-- Hero Section -->
+      <header class="hero-section">
+        <div class="hero-panel">
+          <div class="hero-title-block">
+            <h1 class="hero-title">
+              Laws Regulating Freedom of Expression, Privacy &amp; Surveillance
+            </h1>
+            <p class="hero-subtitle">
+              An overview of the constitutional, criminal and surveillance laws
+              that shape civic space in Nepal.
+            </p>
+          </div>
+
+          <!-- CCTV illustration (swap assets/cctv.png to change the art) -->
+          <div class="hero-illustration">
+            <img
+              class="hero-illustration__img"
+              src="assets/cctv.png"
+              alt="Illustration of a CCTV camera pole with multiple surveillance cameras"
+            />
+          </div>
+        </div>
+      </header>
+
+      <!-- Law Sections -->
+      <section class="law-section">
+        <!-- Toggle Buttons -->
+        <div class="toggle-control-container">
+          <button class="tab-btn active" data-target="expression">
+            Freedom Of Expression
+          </button>
+          <button class="tab-btn" data-target="privacy">Privacy</button>
+        </div>
+
+        <!-- Laws Container (Will be dynamically populated by JS from data.js) -->
+        <div class="laws-rows-container">
+          <!-- Initial static placeholder rows will render dynamically -->
+        </div>
+      </section>
+
+      <!--  NEW SURVEILLANCE SECTION  -->
+      <section id="surveillance" class="sv-section" aria-labelledby="sv-title">
+        <header class="sv-header">
+          <h2 id="sv-title" class="sv-title">
+            CCTV/Camera &amp; Operation Procedure, 2072
+          </h2>
+        </header>
+
+        <div class="sv-stage">
+          <canvas class="sv-canvas" aria-hidden="true"></canvas>
+          <div class="sv-grid"></div>
+        </div>
+      </section>
+
+      <!--  NEW CRITICAL ANALYSIS SECTION  -->
+      <section
+        id="critical-analysis"
+        class="ca-section"
+        aria-labelledby="ca-title"
+      >
+        <h2 id="ca-title" class="ca-sr-only">Critical Analysis</h2>
+
+        <p class="ca-intro">
+          The laws of Nepal appear to protect freedom of speech and privacy.
+          However, these formal safeguards are heavily constrained by broad and
+          ambiguous restrictions and power given to authorities.
+        </p>
+
+        <div class="ca-flow">
+          <svg class="ca-svg" aria-hidden="true" focusable="false"></svg>
+
+          <div class="ca-box ca-box--top" data-ca-id="top">
+            dominant caste, patriarchal &amp; elite social norms
+          </div>
+
+          <div class="ca-row ca-row--mid">
+            <div class="ca-box ca-box--mid" data-ca-id="m1">
+              undefined ambiguous terms
+            </div>
+            <div class="ca-box ca-box--mid" data-ca-id="m2">
+              vague &amp; broad provisions
+            </div>
+            <div class="ca-box ca-box--mid" data-ca-id="m3">
+              discretionary powers granted to authorities
+            </div>
+          </div>
+
+          <div class="ca-box ca-box--pen" data-ca-id="pen">
+            room for arbitrary and selective enforcement
+          </div>
+
+          <div class="ca-box ca-box--bot" data-ca-id="bot">
+            criminalization of dissent and marginalized voices
+          </div>
+        </div>
+      </section>
+
+      <!--  SEPARATE FOOTER SECTION  -->
+      <footer class="bd-footer" aria-label="More information">
+        <div class="bd-footer__card">
+          <p class="bd-footer__note">
+            a more detailed analysis of these laws is available here:
+          </p>
+          <img
+            class="bd-footer__logo"
+            src="assets/logo.png"
+            alt="Body &amp; Data logo"
+            width="120"
+            height="120"
+          />
+          <img
+            class="bd-footer__qr"
+            src="assets/qr.png"
+            alt="QR code linking to the detailed analysis"
+            width="110"
+            height="110"
+          />
+          <a class="bd-footer__link" href="https://www.bodyanddata.org"
+            >www.bodyanddata.org</a
+          >
+        </div>
+      </footer>
+    </div>
+
+    <!-- Script Files: Data file must load before main script logic -->
+    <script src="js/data.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/cctv-sprites.js"></script>
+    <script src="js/cctv-input.js"></script>
+    <script src="js/cctv-scene.js"></script>
+    <script src="js/critical-analysis.js"></script>
+  </body>
+</html>
