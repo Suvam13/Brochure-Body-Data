@@ -1,9 +1,3 @@
-/* =========================================================
-   Scene: builds the cards, lays out the pole and cameras, and runs the
-   animation loop. Reads aim state from window.Surveillance.aim (set by
-   cctv-input.js) and sprite art from window.Surveillance.sprites.
-   ========================================================= */
-
 (function () {
     'use strict';
 
@@ -49,6 +43,7 @@
     let stage = null;
     let canvas = null;
     let grid = null;
+    let footer = null;      // .sv-grid-footer: the final card's own block, separate from the grid
     let ctx = null;
     let poleCanvas = null;
 
@@ -99,8 +94,8 @@
             el: el,
             dir: dir,                                   // -1 = left side, 1 = right side
             kind: index % 2 === 0 ? 'box' : 'bullet',   // alternate camera types
-            rest: dir < 0 ? Math.PI : 0,                // outward direction
-            angle: dir < 0 ? Math.PI : 0,               // current angle
+            rest: dir < 0 ? 0 : Math.PI,                // inward: left cams face right, right cams face left
+            angle: dir < 0 ? 0 : Math.PI,               // current angle (starts at rest)
             speed: 0.35 + 0.25 * ((index * 0.618) % 1), // idle sweep speed, rad/s
             phase: index * 1.3,                         // idle sweep phase
             laser: 0,                                   // 0..1 laser visibility
@@ -113,25 +108,43 @@
 
     function buildCards() {
         grid.innerHTML = '';
+        footer.innerHTML = '';
         cams = [];
         let leftRow = 0;
         let rightRow = 0;
 
-        surveillanceData.forEach(function (item) {
+        surveillanceData.forEach(function (item, index) {
             const el = document.createElement('article');
-            el.className = 'sv-card sv-card--' + item.tone + ' sv-card--' + item.side
+            const isLast = index === surveillanceData.length - 1;
+            el.className = 'sv-card sv-card--' + item.tone
+                + (isLast ? ' sv-card--last' : ' sv-card--' + item.side)
                 + (item.italic ? ' sv-card--italic' : '');
             el.dataset.id = item.id;
             el.tabIndex = 0;
-
-            // Desktop rows: left and right are counted separately
-            const row = item.side === 'left' ? ++leftRow : ++rightRow;
-            el.style.setProperty('--sv-row', String(row));
 
             const p = document.createElement('p');
             p.className = 'sv-card__text';
             p.innerHTML = cardHtml(item);
             el.appendChild(p);
+
+            // The final long card goes into its own block below the grid,
+            // separate from the zigzag rows, so css can give it its own
+            // margin/gap (.sv-grid-footer). It has no camera.
+            if (isLast) {
+                footer.appendChild(el);
+                return;
+            }
+
+            // Desktop rows: left and right are counted separately
+            const row = item.side === 'left' ? ++leftRow : ++rightRow;
+            el.style.setProperty('--sv-row', String(row));
+
+            // Phone zigzag: interleave left/right cards going down the stack
+            // (left cards get odd order, right cards even). The desktop grid
+            // places cards explicitly, so `order` only affects the phone flex
+            // layout.
+            el.style.order = item.side === 'left' ? String(2 * leftRow - 1) : String(2 * rightRow);
+
             grid.appendChild(el);
 
             if (item.camera) {
@@ -151,106 +164,81 @@
     }
 
     
-    /* Static pole, drawn once per layout into an offscreen canvas */
+    /* Edge-mounted layout: no central pole. The poleCanvas is kept transparent;
+       each camera's bracket (drawn in drawCam) reads as a wall mount at the
+       page edge. */
     function buildPole() {
         const pc = poleCanvas.getContext('2d');
-        const colours = poleColours();
-
         pc.setTransform(dpr, 0, 0, dpr, 0, 0);
         pc.globalCompositeOperation = 'source-over';
         pc.clearRect(0, 0, W, H);
-
-        const left = cx - poleW / 2;
-
-        // Dark outline
-        pc.fillStyle = colours.dark;
-        pc.fillRect(left - 1.5, 0, poleW + 3, H);
-
-        // Cylinder shading: dark edges, bright specular band in the centre
-        const body = pc.createLinearGradient(left, 0, left + poleW, 0);
-        body.addColorStop(0, colours.dark);
-        body.addColorStop(0.22, colours.body);
-        body.addColorStop(0.42, '#ffffff');
-        body.addColorStop(0.6, colours.body);
-        body.addColorStop(0.85, colours.dark);
-        body.addColorStop(1, colours.dark);
-        pc.fillStyle = body;
-        pc.fillRect(left, 0, poleW, H);
-
-        // Cap: dark block with a lighter top edge
-        pc.fillStyle = colours.dark;
-        pc.fillRect(left - 4, 0, poleW + 8, 14);
-        const capShade = pc.createLinearGradient(left - 4, 0, left + poleW + 4, 0);
-        capShade.addColorStop(0, colours.dark);
-        capShade.addColorStop(0.5, colours.body);
-        capShade.addColorStop(1, colours.dark);
-        pc.fillStyle = capShade;
-        pc.fillRect(left - 2, 2, poleW + 4, 4);
-
-        // Fade the base out over the last 80px
-        const fadeH = Math.min(80, H);
-        pc.globalCompositeOperation = 'destination-out';
-        const fade = pc.createLinearGradient(0, H - fadeH, 0, H);
-        fade.addColorStop(0, 'rgba(0, 0, 0, 0)');
-        fade.addColorStop(1, 'rgba(0, 0, 0, 1)');
-        pc.fillStyle = fade;
-        pc.fillRect(0, H - fadeH, W, fadeH);
-        pc.globalCompositeOperation = 'source-over';
     }
 
     /* ----- Layout: sizes, sprites, and mount points ----- */
 
     function measureCams(sr) {
-        // Even distribution along the whole pole: left and right cameras
-        // alternate in slots running from just below the pole cap to just
-        // above the base fade, so the cameras span the full length of the
-        // pole instead of clustering where the cards happen to sit.
-        const yTop = 44;
-        const yBottom = H - 96;
-        const span = Math.max(1, yBottom - yTop);
+        // Camera heights are DECOUPLED from the card rows: on desktop each
+        // side's cameras sit at even, paired rungs down its page edge
+        // (left and right share the same rungs), computed from the stage
+        // height alone - never from where the text cards are.
+        //
+        // Phones are the one exception: the stacked cards sit ABOVE the
+        // canvas and span nearly the full width, so a camera at any other
+        // height would be hidden behind a card. Each camera stays level
+        // with the card it watches, in the side lane that card leaves open.
+        //
+        // The arm length is the same everywhere: halfway from the page edge
+        // toward the innermost card edge on that SIDE (not per row), so
+        // every arm on a side is the same length.
+        const edgePad = Math.max(armT, 6);   // bracket inset from the very edge
 
-        let leftCount = 0;
-        let rightCount = 0;
+        // Inner edge per side: the card edge closest to this side's page edge
+        let innerL = Infinity;
+        let innerR = -Infinity;
         for (let i = 0; i < cams.length; i++) {
-            if (cams[i].dir < 0) leftCount++; else rightCount++;
+            const r = cams[i].el.getBoundingClientRect();
+            if (cams[i].dir < 0) {
+                if (r.left - sr.left < innerL) innerL = r.left - sr.left;
+            } else if (r.right - sr.left > innerR) {
+                innerR = r.right - sr.left;
+            }
         }
-        const slots = Math.max(2 * leftCount, 2 * rightCount, 1);
+        if (innerL === Infinity) innerL = cx - 40;
+        if (innerR === -Infinity) innerR = cx + 40;
 
-        let leftIdx = 0;
-        let rightIdx = 0;
+        // Even paired rungs down the stage height
+        const pad = Math.max(camCss * 0.55, 20);
+        const top = pad;
+        const span = Math.max(1, H - pad * 2);
+        const perSide = { '-1': 0, '1': 0 };
+        for (let i = 0; i < cams.length; i++) perSide[cams[i].dir]++;
+        const done = { '-1': 0, '1': 0 };
 
         for (let i = 0; i < cams.length; i++) {
             const cam = cams[i];
-            const r = cam.el.getBoundingClientRect();
+            cam.mountX = cam.dir < 0 ? edgePad : W - edgePad;
 
-            // Inner edge = the card edge nearest the pole
-            const inner = cam.dir < 0 ? (r.right - sr.left) : (r.left - sr.left);
-            // Reach is 50% of the gap from pole to card inner edge. Bigger cameras
-            // need a touch more room, so this was trimmed from the original 0.55.
-            const reach = Math.max(Math.abs(inner - cx) * 0.50, poleW / 2 + 14);
-
-            let mountY;
             if (wide) {
-                // Slot ladder: left cameras get slots 0, 2, 4... and right
-                // cameras 1, 3, 5..., so the two sides zigzag down the pole.
-                const slot = cam.dir < 0 ? 2 * leftIdx++ : 2 * rightIdx++ + 1;
-                mountY = yTop + (slot + 0.5) * (span / slots);
+                // Desktop: even paired rungs down the stage height
+                const n = Math.max(1, perSide[cam.dir]);
+                const rung = (done[cam.dir]++ + 0.5) / n;
+                cam.mountY = top + rung * span;
             } else {
-                // Phone: cards are stacked, so park each camera in the gap
-                // above its card where it is not hidden behind the card.
-                const prev = cam.el.previousElementSibling;
-                if (prev) {
-                    const pr = prev.getBoundingClientRect();
-                    mountY = (pr.bottom + r.top) / 2 - sr.top;   // centre of the gap above
-                } else {
-                    mountY = r.top - sr.top - 24;
-                }
+                // Phone: level with the card it watches (visibility -
+                // see the comment above)
+                const r = cam.el.getBoundingClientRect();
+                cam.mountY = clamp(r.top + r.height / 2 - sr.top, armT + 2, H - armT - 2);
             }
-
-            cam.mountY = clamp(mountY, armT, H - armT);
-            cam.mountX = cx + cam.dir * poleW / 2;
-            cam.swivelX = cx + cam.dir * reach;
             cam.swivelY = cam.mountY;
+
+            // Arm: pivot halfway from the edge toward the text cluster,
+            // kept back far enough that the camera body clears the cards.
+            const inner = cam.dir < 0 ? innerL : innerR;
+            let sx = cam.mountX - cam.dir * Math.max(Math.abs(inner - cam.mountX) * 0.5, 12);
+            const limit = inner + cam.dir * (camCss * 0.95 + 4);
+            if (cam.dir < 0) sx = Math.min(sx, limit); else sx = Math.max(sx, limit);
+            if (cam.dir < 0) sx = Math.max(sx, cam.mountX + 6); else sx = Math.min(sx, cam.mountX - 6);
+            cam.swivelX = sx;
         }
     }
 
@@ -282,10 +270,17 @@
         poleCanvas.height = canvas.height;
 
         wide = mqWide.matches;
-        poleW = wide ? 26 : 20;
-        // Camera size caps: desktop 80..105, phone 56..76. Bumped up from the
-        // original 56..70 / 40..52 so the cameras read clearly on both layouts.
-        camCss = wide ? clamp(W * 0.10, 80, 105) : clamp(W * 0.20, 56, 76);
+        // Camera size scales with the space actually available:
+        // desktop - the lane between the page edge and the centered card
+        // grid; phone - a fraction of the narrow stage so the small cameras
+        // still read clearly beside the zigzag cards.
+        if (wide) {
+            const gridW = grid ? grid.offsetWidth : Math.min(W, 820);
+            const lane = Math.max(80, (W - gridW) / 2);
+            camCss = clamp(lane * 0.42, 48, 105);
+        } else {
+            camCss = clamp(W * 0.10, 26, 40);
+        }
         armT = Math.max(4, camCss * 0.14);
         cx = W / 2;
 
@@ -327,10 +322,11 @@
         const def = asset.def;
 
         // Both camera types are side views in their art. Every camera turns
-        // about its rear mount to aim, and right-side cameras are mirrored,
-        // so each camera rests facing outward (left cams left, right cams
-        // right) and visibly turns toward the cursor as it tracks.
-        const mirror = cam.dir > 0;
+        // about its rear mount to aim. In the edge-mounted layout the LEFT
+        // cameras are mirrored so they rest facing right (inward), and the
+        // RIGHT cameras rest facing left (inward) - each turns toward the
+        // cursor as it tracks.
+        const mirror = cam.dir < 0;
         const rot = cam.angle - cam.rest;
         const a = cam.angle;
         const ca = Math.cos(a);
@@ -534,6 +530,16 @@
             canvas = section.querySelector('.sv-canvas');
             grid = section.querySelector('.sv-grid');
             if (!stage || !canvas || !grid) return;
+
+            // The final long card gets its own block below the grid, so its
+            // gap from the zigzag rows is styled separately. Created here if
+            // the markup doesn't already provide one.
+            footer = section.querySelector('.sv-grid-footer');
+            if (!footer) {
+                footer = document.createElement('div');
+                footer.className = 'sv-grid-footer';
+                stage.appendChild(footer);
+            }
 
             // Force the canvas out of normal flow, whatever the stylesheet says
             Object.assign(stage.style, { position: 'relative' });

@@ -1,30 +1,32 @@
-/* =========================================================
-   Surveillance section
-   Every rule is scoped under #brochure-root #surveillance.
-   Change colours and fonts in the token block only.
-
-   The v5 cctv-scene.js reads the --sv-arm / --sv-arm-top /
-   --sv-bracket / --sv-bracket-top / --sv-cable / --sv-laser
-   tokens from this element via getComputedStyle, so they MUST
-   stay defined here or the cameras fall back to defaults.
-   ========================================================= */
 
 #brochure-root #surveillance {
     /* ----- Tokens ----- */
-    --sv-bg: transparent;                 /* inherits the brochure's #422B7C canvas */
-    --sv-title-bg: #544888;               /* slightly lifted panel for the heading */
-    --sv-title-fg: #FFF7C5;
-    --sv-card-light-bg: #FFFBE5;
-    --sv-card-light-fg: #422B7C;
-    --sv-card-dark-bg: #1f1647;           /* very dark indigo, reads as "Mandatory" */
-    --sv-card-dark-fg: #FFF7C5;
-    --sv-card-muted-bg: #A99FAF;
-    --sv-card-muted-fg: #2a1d5e;
-    --sv-card-accent-bg: #E8B053;         /* ochre, matches the analysis-section accent */
-    --sv-card-accent-fg: #422B7C;
-    --sv-card-border: rgba(255, 247, 197, 0.25);
+    --sv-bg: transparent;
 
-    /* Pole + camera hardware colours (read by cctv-scene.js) */
+    /* Header */
+    --sv-title-bg: #332562;
+    --sv-title-fg: #FFF7C5;
+
+    /* Standard cream cards */
+    --sv-card-light-bg: #FFF7C5;
+    --sv-card-light-fg: #422B7C;
+
+    /* Purple cards */
+    --sv-card-dark-bg: #784099;
+    --sv-card-dark-fg: #FFF7C5;
+
+    /* Grey cards */
+    --sv-card-muted-bg: #AFAFAF;
+    --sv-card-muted-fg: #422B7C;
+
+    /* Secondary cream cards */
+    --sv-card-accent-bg: #FFF7C5;
+    --sv-card-accent-fg: #422B7C;
+
+    /* Borders */
+    --sv-card-border: rgba(66, 43, 124, 0.18);
+
+    /* Camera hardware colours (unchanged) */
     --sv-pole: #b5b8c9;
     --sv-pole-dark: #5c5e6b;
     --sv-arm: #8c90a6;
@@ -40,10 +42,10 @@
 
     position: relative;
     box-sizing: border-box;
-    margin-top: 56px;
-    padding: 28px 12px;
+    margin: 56px -6px 0;
+    padding: 28px 0;
     background: var(--sv-bg);
-    border-radius: 20px;
+    border-radius: 0;
     overflow: hidden;
 }
 
@@ -58,7 +60,8 @@
 #brochure-root #surveillance .sv-header {
     display: flex;
     justify-content: center;
-    margin-bottom: 32px;
+    margin-bottom: 24px;
+    padding: 0 16px;
 }
 
 #brochure-root #surveillance .sv-title {
@@ -83,7 +86,8 @@
 
 #brochure-root #surveillance .sv-stage {
     position: relative;
-    max-width: 1000px;
+    width: 100%;
+    max-width: none;
     margin: 0 auto;
     contain: layout;
 }
@@ -98,16 +102,16 @@
     pointer-events: none;
 }
 
+/* ----- Cards (phone-first: zigzag stack) ----- */
+
 #brochure-root #surveillance .sv-grid {
     position: relative;
     z-index: 1;
     display: flex;
     flex-direction: column;
-    gap: 44px;
-    padding: 24px 0;
+    gap: 20px;
+    padding: 12px 8px 0;
 }
-
-/* ----- Cards ----- */
 
 #brochure-root #surveillance .sv-card {
     box-sizing: border-box;
@@ -121,13 +125,30 @@
     color: var(--sv-card-light-fg);
 }
 
+/* Phone zigzag positioning */
+
 #brochure-root #surveillance .sv-card--left {
-    align-self: flex-start;
+    align-self: flex-end;
 }
 
 #brochure-root #surveillance .sv-card--right {
-    align-self: flex-end;
+    align-self: flex-start;
 }
+
+/* ----- Final card: separate block below the zigzag ----- */
+
+#brochure-root #surveillance .sv-grid-footer {
+    position: relative;
+    z-index: 1;
+    padding: 0 8px;
+    margin-top: 20px;
+}
+
+#brochure-root #surveillance .sv-grid-footer .sv-card {
+    width: 100%;
+}
+
+/* ----- Card colour variations ----- */
 
 #brochure-root #surveillance .sv-card--light {
     background: var(--sv-card-light-bg);
@@ -149,6 +170,16 @@
     color: var(--sv-card-accent-fg);
 }
 
+/* ----- Final card: independently orange ----- */
+
+#brochure-root #surveillance .sv-grid-footer .sv-card {
+    background: #E8B053;
+    color: #422B7C;
+    border-color: rgba(66, 43, 124, 0.18);
+}
+
+/* ----- Hover and focus ----- */
+
 #brochure-root #surveillance .sv-card:hover,
 #brochure-root #surveillance .sv-card:focus-visible {
     box-shadow: 0 10px 22px -8px rgba(0, 0, 0, 0.5);
@@ -158,6 +189,8 @@
     outline: 2px solid var(--sv-focus);
     outline-offset: 3px;
 }
+
+/* ----- Card typography ----- */
 
 #brochure-root #surveillance .sv-card__text {
     margin: 0;
@@ -174,43 +207,70 @@
     font-style: italic;
 }
 
+/* ----- Full-bleed sides: 480px and wider ----- */
+
+@media (min-width: 480px) {
+    #brochure-root #surveillance {
+        margin-left: -10px;
+        margin-right: -10px;
+    }
+}
+
 /* =========================================================
-   Desktop (900px and wider): three-column grid around the pole.
-   The 260px middle column is the camera lane. cctv-scene.js
-   measures each card's inner edge to position the cameras, so
-   keeping cards at max-width 300px is what stops the cameras
-   from being pushed off-canvas.
+   Desktop (900px and wider): two-column zigzag grid.
    ========================================================= */
 
 @media (min-width: 900px) {
     #brochure-root #surveillance {
-        padding: 48px 32px;
+        padding: 48px 0;
+    }
+
+    #brochure-root #surveillance .sv-header {
+        margin-bottom: 40px;
     }
 
     #brochure-root #surveillance .sv-grid {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 260px minmax(0, 1fr);
-        row-gap: 24px;
-        padding: 0;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 12px;
+        row-gap: 4px;
+        max-width: min(745px, 66vw);
+        margin: 0 auto;
+        padding: 24px 0 0;
     }
 
     #brochure-root #surveillance .sv-card {
         width: 100%;
-        max-width: 300px;
-        align-self: center;
     }
 
     #brochure-root #surveillance .sv-card--left {
         grid-column: 1;
-        grid-row: var(--sv-row);
-        justify-self: start;
-        align-self: center;
+        grid-row: calc(var(--sv-row) * 2 - 1);
+        align-self: start;
+        justify-self: stretch;
     }
 
     #brochure-root #surveillance .sv-card--right {
-        grid-column: 3;
-        grid-row: var(--sv-row);
-        justify-self: end;
-        align-self: center;
+        grid-column: 2;
+        grid-row: calc(var(--sv-row) * 2);
+        align-self: start;
+        justify-self: stretch;
+    }
+
+    /* Final long card: separate centered block */
+
+    #brochure-root #surveillance .sv-grid-footer {
+        max-width: min(745px, 66vw);
+        margin: 24px auto 0;
+        padding: 0;
+    }
+}
+
+/* ----- Full-bleed sides: 1100px and wider ----- */
+
+@media (min-width: 1100px) {
+    #brochure-root #surveillance {
+        margin-left: -24px;
+        margin-right: -24px;
     }
 }
