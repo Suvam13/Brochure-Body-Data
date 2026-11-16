@@ -50,9 +50,8 @@ html, body {
     gap: 56px;
     background-color: #544888;
     padding: 48px 32px;
+    border: 2px solid #E8B053;
     border-radius: 20px;
-    /* Cap + centre on wide screens. max-width yields automatically below
-       1400px, so the tablet/phone media queries below keep working. */
     max-width: 1400px;
     margin: 0 auto;
 }
@@ -88,7 +87,7 @@ html, body {
 #brochure-root .laws-rows-container {
     display: flex;
     flex-direction: column;
-    gap: 40px;
+    gap: 70px;
     max-width: 1000px;
     margin: 0 auto;
     width: 100%;
@@ -118,7 +117,7 @@ html, body {
     align-items: center;
     justify-content: center;
     background-color: #FFFBE5;
-    border: 2px solid #422B7C;
+    border: 6px solid #AF9ED7;
     border-radius: 20px;
     width: 100%;
     min-height: 430px;
@@ -265,7 +264,7 @@ html, body {
 #brochure-root .content-column h3.section-badge {
     display: inline-block;
     background-color: #332562;
-    color: #FFF7C5;
+    color: #FFF7C5; 
     padding: 5px 16px;
     font-size: 1.5rem;
     font-weight: 700;
@@ -279,11 +278,11 @@ html, body {
 #brochure-root .content-column h4.section-subtitle {
     font-size: 1rem;
     font-weight: 700;
-    color: #FFF7C5;
-    background-color: #422B7C;
+    color: #4F3980;
+    background-color: #FFF0B0;
     padding: 10px 14px;
     margin-bottom: 20px;
-    /* margin-top: 0px; */
+    border: 1px solid #332562;
     line-height: 1.4;
 }
 

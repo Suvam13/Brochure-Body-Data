@@ -1,8 +1,3 @@
-/* =========================================================
-   Critical Analysis section
-   Every rule is scoped under #brochure-root #critical-analysis.
-   Change colours and fonts in the token block only.
-   ========================================================= */
 
 #brochure-root #critical-analysis {
     /* ----- Tokens (v5 brochure palette) ----- */
@@ -18,8 +13,6 @@
 
     position: relative;
     box-sizing: border-box;
-    /* Cap + centre like .law-section above. max-width yields automatically
-       below 1400px, so the tablet/phone media queries keep working. */
     max-width: 1400px;
     margin: 56px auto 0;
     padding: 48px 24px 64px;
@@ -27,6 +20,7 @@
     color: var(--ca-intro-fg);
     font-family: var(--ca-font-body);
     border-radius: 20px;
+    border: 2px solid #E8B053;
     overflow: hidden;
 }
 
@@ -61,9 +55,6 @@
     text-align: left;
 }
 
-/* ----- Flowchart card ----- */
-/* Everything sits on a slightly lighter rounded card so the
-   flowchart reads as a single composition. */
 
 #brochure-root #critical-analysis .ca-flow {
     position: relative;
@@ -73,6 +64,8 @@
     max-width: 880px;
     margin: 0 auto;
     contain: layout;
+    border: 2px solid #E8B053;
+
 }
 
 /* SVG arrow layer sits behind the boxes and never captures pointer events */
@@ -136,9 +129,7 @@
     padding: 16px 18px;
 }
 
-/* =========================================================
-   Phone (below 700px)
-   ========================================================= */
+
 
 @media (max-width: 699px) {
     #brochure-root #critical-analysis {

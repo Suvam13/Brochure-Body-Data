@@ -4,7 +4,7 @@
     --sv-bg: transparent;
 
     /* Header */
-    --sv-title-bg: #332562;
+    --sv-title-bg: #6B0A2E;
     --sv-title-fg: #FFF7C5;
 
     /* Standard cream cards */
@@ -80,6 +80,7 @@
     text-transform: uppercase;
     letter-spacing: 0.02em;
     border-radius: 10px;
+    border: 3px solid #784099;
 }
 
 /* ----- Stage: canvas behind, cards in front ----- */
@@ -100,6 +101,7 @@
     display: block;
     z-index: 0;
     pointer-events: none;
+    
 }
 
 /* ----- Cards (phone-first: zigzag stack) ----- */
