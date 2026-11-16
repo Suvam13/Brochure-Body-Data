@@ -100,7 +100,11 @@
             phase: index * 1.3,                         // idle sweep phase
             laser: 0,                                   // 0..1 laser visibility
             mountX: 0, mountY: 0,
-            swivelX: 0, swivelY: 0
+            swivelX: 0, swivelY: 0,
+            gaze: 0,                                    // pupil drift, -1..1
+            blink: 0,                                   // 0 = open, 1 = shut
+            blinkStart: -1e9, blinkDur: 0,              // the current blink
+            nextBlink: -1                               // next blink time (-1 = not yet set)
         };
     }
 
@@ -313,7 +317,7 @@
         SCRATCH.y = cam.swivelY + dx * rs + dy * rc;
     }
 
-    function drawCam(cam) {
+    function drawCam(cam, now) {
         const asset = S.sprites.get(cam.kind);
 
         // Skip the camera until its SVG has loaded. The frame loop retries each frame.
@@ -369,7 +373,9 @@
         ctx.translate(cam.swivelX, cam.swivelY);
         ctx.rotate(rot);
         if (mirror) ctx.scale(-1, 1);
+        ctx.imageSmoothingEnabled = false;      // keep the pixel art crisp
         ctx.drawImage(asset.base, ox, oy, w, h);
+        drawEye(cam, def, c, now);
         ctx.restore();
 
         // Laser: dashed line from the lens, visible only while tracking
@@ -388,6 +394,116 @@
             ctx.lineTo(lensX + ca * LASER_LENGTH, lensY + sa * LASER_LENGTH);
             ctx.stroke();
             ctx.restore();
+        }
+    }
+
+    /* ----- Eye ----- */
+
+    /* The lens is an eye. It glows red, its pupil narrows to a slit while
+       the camera is locked on, its pupil drifts as the camera sweeps, and
+       the lid shuts now and then. Drawn in the camera's own frame (origin
+       at the pivot, one art unit = c css px). */
+    function drawEye(cam, def, c, now) {
+        const L = def.lens;
+        const lx = (L.x - def.pivot.x) * c;
+        const ly = (L.y - def.pivot.y) * c;
+        const R = L.r * c;
+        const lock = cam.laser;                              // 0 idle .. 1 locked on
+        const breath = 0.5 + 0.5 * Math.sin(now / 1100 + cam.phase);
+        const line = Math.max(0.6, R * 0.14);
+
+        // Red light spilling onto the housing around the lens
+        const glowR = R * 2.6;
+        const glow = ctx.createRadialGradient(lx, ly, R * 0.5, lx, ly, glowR);
+        const ga = (0.14 + 0.12 * breath) * (0.5 + 0.5 * lock);
+        glow.addColorStop(0, 'rgba(255, 36, 48, ' + ga.toFixed(3) + ')');
+        glow.addColorStop(1, 'rgba(255, 36, 48, 0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(lx, ly, glowR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Everything inside the lens is clipped to its circle
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(lx, ly, R, 0, Math.PI * 2);
+        ctx.clip();
+
+        // Dark red eyeball
+        ctx.fillStyle = '#2a0309';
+        ctx.fillRect(lx - R, ly - R, R * 2, R * 2);
+
+        // Iris
+        const irisR = R * 0.84;
+        const iris = ctx.createRadialGradient(lx, ly, irisR * 0.15, lx, ly, irisR);
+        iris.addColorStop(0, '#ff6a55');
+        iris.addColorStop(0.6, '#e0202e');
+        iris.addColorStop(1, '#7a0a16');
+        ctx.fillStyle = iris;
+        ctx.beginPath();
+        ctx.arc(lx, ly, irisR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pupil: round when idle, a vertical slit when locked on
+        const py = ly + cam.gaze * R * 0.28;
+        const prx = irisR * (0.17 + 0.3 * (1 - lock)) * (0.94 + 0.06 * breath);
+        const pry = irisR * 0.78;
+        ctx.fillStyle = '#060204';
+        ctx.beginPath();
+        ctx.ellipse(lx, py, prx, pry, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Wet highlight
+        ctx.fillStyle = 'rgba(255, 245, 240, 0.75)';
+        ctx.beginPath();
+        ctx.arc(lx - irisR * 0.38, py - irisR * 0.42, Math.max(0.6, R * 0.14), 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eyelids close from above and below and meet at the centre
+        const b = cam.blink;
+        const travel = R * 1.4;
+        const topEdge = ly - travel + b * travel;
+        const botEdge = ly + travel - b * travel;
+        ctx.fillStyle = '#8d919c';                           // the housing grey
+        ctx.fillRect(lx - 2 * R, ly - 2 * R, 4 * R, topEdge - (ly - 2 * R));
+        ctx.fillRect(lx - 2 * R, botEdge, 4 * R, (ly + 2 * R) - botEdge);
+        ctx.fillStyle = '#262931';                           // lash line on each lid
+        ctx.fillRect(lx - 2 * R, topEdge - line, 4 * R, line);
+        ctx.fillRect(lx - 2 * R, botEdge, 4 * R, line);
+        ctx.restore();
+
+        // Dark rim around the lens
+        ctx.strokeStyle = '#262931';
+        ctx.lineWidth = Math.max(0.8, R * 0.2);
+        ctx.beginPath();
+        ctx.arc(lx, ly, R, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    /* Blinks are rare and irregular while idle. Locked on, the camera
+       holds a long unbroken stare and then closes slowly, once. */
+    function updateBlink(cam, now) {
+        if (reduced) {
+            cam.blink = 0;
+            return;
+        }
+        if (cam.nextBlink < 0) cam.nextBlink = now + 1200 + Math.random() * 2400;
+
+        const t = now - cam.blinkStart;
+        if (t >= 0 && t < cam.blinkDur) {
+            const p = t / cam.blinkDur;
+            cam.blink = p < 0.4 ? p / 0.4 : 1 - (p - 0.4) / 0.6;   // shut quickly, open slower
+            return;
+        }
+        cam.blink = 0;
+
+        if (now >= cam.nextBlink) {
+            const locked = cam.laser > 0.5;
+            cam.blinkStart = now;
+            cam.blinkDur = locked ? 520 : 200;
+            cam.nextBlink = now + cam.blinkDur + (locked
+                ? 3500 + Math.random() * 3000
+                : 1800 + Math.random() * 2800);
         }
     }
 
@@ -470,16 +586,19 @@
                 target = cam.rest + clamp(wrapAngle(desired - cam.rest), -AIM_LIMIT, AIM_LIMIT);
             }
 
-            cam.angle += wrapAngle(target - cam.angle) * frac;
+            const diff = wrapAngle(target - cam.angle);
+            cam.angle += diff * frac;
+            cam.gaze += (clamp(diff * 6, -1, 1) - cam.gaze) * frac;
 
             const tracking = src !== 'idle' && src !== 'rest';
             cam.laser += clamp((tracking ? 1 : 0) - cam.laser, -laserStep, laserStep);
+            updateBlink(cam, now);
         }
 
         ctx.clearRect(0, 0, W, H);
         ctx.drawImage(poleCanvas, 0, 0, W, H);
         for (let i = 0; i < cams.length; i++) {
-            drawCam(cams[i]);
+            drawCam(cams[i], now);
         }
     }
 

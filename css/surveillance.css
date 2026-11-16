@@ -24,7 +24,7 @@
     --sv-card-accent-fg: #422B7C;
 
     /* Borders */
-    --sv-card-border: rgba(66, 43, 124, 0.18);
+    --sv-card-border: #AF9ED7;
 
     /* Camera hardware colours (unchanged) */
     --sv-pole: #b5b8c9;
@@ -176,8 +176,9 @@
 
 #brochure-root #surveillance .sv-grid-footer .sv-card {
     background: #E8B053;
+    margin-top: 60px;
     color: #422B7C;
-    border-color: rgba(66, 43, 124, 0.18);
+    border: 3px solid #6A082B;
 }
 
 /* ----- Hover and focus ----- */
